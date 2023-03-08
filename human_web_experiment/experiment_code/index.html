@@ -1,0 +1,279 @@
+<!doctype html>
+<html>
+
+  <head>
+    <title>UniMelb CCS</title>
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/jspsych.js"></script>
+    <script src="./js/plugins/jspsych-survey-multi-choice.js"></script>
+	  <script src="./js/plugins/jspsych-html-button-response.js"></script>
+    <script src="./js/plugins/jspsych-external-html-keyboard-response.js"></script>
+    <script src="./js/plugins/jspsych-survey-text.js"></script>
+    <script src="./js/plugins/jspsych-text.js"></script>
+    <script src="./js/plugins/jspsych-single-stim.js"></script>
+    <script src="./js/plugins/jspsych-external-html.js"></script>
+	  <script src="./js/welcome.js"></script>
+    <link href="./js/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+  </head>
+
+  <body>
+	  <div id="welcome"></div>
+  </body>
+
+  <script>
+
+    /* initialise timeline*/
+    let timeline=[];
+    let introloop=[];
+	  const images = [
+		  './img/cargo_on_target.png',
+		  './img/cargo.png',
+      './img/cursorkeys.png',
+		  './img/empty.png',
+      './img/floor.png',
+		  './img/keeper_on_target.png',
+      './img/keeper.png',
+      './img/target.png',
+      './img/wall.png'
+	  ];
+    let code;
+
+    /* function to start the jsPsych experiment */
+    function startExperiment(){
+      // record the Prolific code in the jsPsych data
+      if (window.location.href.includes("?")){
+        code = window.location.href.split('?')[1].split('&')[0].split('=')[1];
+      } else {
+        code = 'test';
+      }
+      jsPsych.data.addProperties({
+        ProlificCode: code
+      });
+
+      jsPsych.init({
+        timeline: timeline,
+        preload_images: images,
+        show_progress_bar: true,
+        on_finish: function() {
+          endExperiment( jsPsych.data.get().csv(), function() { document.write('<div id="endscreen" class="endscreen" style="width:1000px"><div class="endscreen" style="text-align:center; border:0px solid; padding:10px; font-size:120%; width:800px; float:right"><p><br><br><br>All done!<br><br>To receive payment, click <a href="https://app.prolific.co/submissions/complete?cc=5A10782B">HERE</a>. Please contact us if something goes wrong and we\'ll fix it as quickly as possible.</p></div></div>') })
+        }
+      });
+    }
+
+    /* save and finish */
+    function endExperiment(dataset,callback) {
+      $.post('submit',{"content": dataset}); // uncomment to post data
+      // console.log(dataset) // comment out to avoid console log
+      setTimeout(callback,1000)
+    }
+
+    /* change the display property of a set of objects */
+    function setDisplay(theClass, theValue) {
+      var i, classElements = document.getElementsByClassName(theClass);
+      for (i = 0; i < classElements.length; i = i + 1) {
+        classElements[i].style.display = theValue;
+      }
+    }
+
+    /* A grossly typical way to run the instructions is to go through a series
+    of small slides (implemeted as trials in jsPsych) with a minimum reading time
+    enforced for each slide, such that the "continue" button doesn't appear until
+    the time elapses. At the end of the instructions, there is a short quiz, and if
+    the participant gets them wrong they are sent back to the beginning */
+
+
+
+    /* define the instruction block */
+    const instruction_block_1 = {
+      type: 'html-button-response',
+      timing_post_trial: 0,
+      choices: ['Click here to continue'],
+      on_trial_start: function() { setTimeout(function() {setDisplay("jspsych-btn","")}, 1000)},
+      is_html: true,
+      timeline: [
+        {stimulus: 'Welcome to the experiment!<p><br><br> Your task is to control a worker (<img src = "./img/keeper.png" width = "40" height = "40">) so that the worker pushes a box (<img src = "./img/cargo.png" width = "40" height = "40">) to a target (<img src = "./img/target.png" width = "40" height = "40">) in the smallest possible number of steps.<p><br>You can move the worker using the arrow keys on your keyboard (<img src = "./img/cursorkeys.png" width = "80" height = "80">).  <br><br><br>'},
+        {stimulus: 'If all else fails and you get stuck you can use the <u>R</u> button to reset the display and return the worker to the initial position. <br> If you do press <u>R</u> you\'ll have to wait for a "penalty time out" of <strong>10</strong> seconds before the display is ready for you to try again.'},
+        {stimulus: 'Sometimes the goal position might not be reachable. If you think that is the case, simply press <u>N</u> to progress to the next trial.'},
+        {stimulus: "On each screen you should try to find the <u>shortest</u> path that allows the worker to push the box to the target. <br> A counter will keep track of the number of steps that you have used. <br> You will earn a bonus payment if your response on each screen is consistently close to the length of the shortest possible path. <p><br>Let's do a practice trial!<br><br><br>"}
+      ]
+    };
+
+    introloop.push(instruction_block_1); // <- the setup block gets pushed to a "loop node"
+
+    const check = function(elem) {
+      return check_function();
+    }
+
+
+    const practice_block_1 = {
+      type:"external-html-keyboard-response",
+      url: "instance_json.html?ID=1000",
+      choices: [32, 37, 38, 39, 40, 82, 78],
+      cont_btn: "cb",
+      check_fn: check,
+      execute_script: true
+    };
+
+    introloop.push(practice_block_1);
+
+    const practice_block_2 = {
+      type:"external-html-keyboard-response",
+      url: "instance_json.html?ID=10000",
+      choices: [32, 37, 38, 39, 40, 82, 78],
+      cont_btn: "cb",
+      check_fn: check,
+      execute_script: true
+    };
+
+    introloop.push(practice_block_2);
+
+
+    const instruction_block_2 = {
+      type: 'html-button-response',
+      timing_post_trial: 0,
+      choices: ['Click here to continue'],
+      on_trial_start: function() { setTimeout(function() {setDisplay("jspsych-btn","")}, 1000)},
+      is_html: true,
+      timeline: [
+        {stimulus: 'Well done. You have successfully finished the practice trial! <br><br><br>'},
+      ]
+    };
+
+    introloop.push(instruction_block_2);
+
+    /* define instruction check block */
+    let instructioncorrect = false;
+    const instruction_check = {
+        type: "survey-multi-choice",
+        preamble: ["<p align='center'><b>Check your knowledge before you begin!</b></p>"],
+        questions: [
+          {prompt: "<b>Question 1</b>: You need to control", options: [" the worker"," the box", " the target"], required: true},
+          {prompt: "<b>Question 2</b>: Your goal is to", options: [" push the box to the target in the smallest number of steps", " push the box to the target without worrying how many steps this takes"], required: true},
+          {prompt: "<b>Question 3</b>: You can control the worker by using your", options: [" mouse", " keyboard"], required: true},
+          {prompt: "<b>Question 4</b>: The 'reset' operation will incur a penalty of ", options: [" 1 second", " 5 seconds", " 10 seconds"], required: true}
+        ],
+        on_finish: function(data) {
+          if( data.responses == '{"Q0":" the worker","Q1":" push the box to the target in the smallest number of steps","Q2":" keyboard","Q3":" 10 seconds"}') {
+            action = false;
+            instructioncorrect = true;
+          }
+        }
+    }
+    introloop.push(instruction_check)
+
+    /* define a page for the incorrect response */
+    let showsplash = true;
+    const splash_screen = {
+      type: 'html-button-response',
+      timing_post_trial: 0,
+	//    button_html: '<button class="jspsych-btn" style="display:none">%choice%</button>',
+      choices: ['Click here to read the instructions again'],
+      on_trial_start: function() {setTimeout(function() {setDisplay("jspsych-btn","")}, 500)},
+      is_html: true,
+      stimulus: 'Unfortunately, at least one of your answers was incorrect.'
+    }
+
+    /* ...but push it to a conditional node that only shows it if the response was wrong */
+    const conditional_splash = {
+      timeline: [splash_screen],
+      conditional_function: function(data) {
+        return !instructioncorrect // skip if correct
+      }
+    }
+    introloop.push(conditional_splash)
+
+    /* finally, add the entirety of this introductory section to a loop node ... */
+    const loop_node = {
+      timeline: introloop,
+      loop_function: function(data) {
+        //var action = true;
+        return !instructioncorrect // stop looping if correct
+      }
+    }
+    timeline.push(loop_node) // ... and add that to the timeline
+
+    /* success trial */
+    const successtrial = {
+      type: 'html-button-response',
+      timing_post_trial: 0,
+	//    button_html: '<button class="jspsych-btn" style="display:none">%choice%</button>',
+      choices: ['Click here to begin the experiment'],
+      on_trial_start: function() { setTimeout(function() {setDisplay("jspsych-btn","")}, 500)},
+      is_html: true,
+      stimulus: "Well done! Let's start the experiment."
+    };
+    timeline.push(successtrial);
+
+    /* instances in the problem solving part and randomly ordered */
+    const order = [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028];
+    order.sort(function(a, b) {return 0.5 - Math.random()});
+
+    for (let i = 0; i < order.length; i++) {
+      const task_block = {
+        type:"external-html-keyboard-response",
+        url: "instance_json.html?ID=" + order[i],
+        choices: [32, 37, 38, 39, 40, 78, 82],
+        cont_btn: "cb",
+        check_fn: check,
+        execute_script: true
+      }
+
+
+      timeline.push(task_block);
+    }
+
+    const instruction_block_3 = {
+      type: 'html-button-response',
+      timing_post_trial: 0,
+      choices: ['Click here to continue'],
+      on_trial_start: function() { setTimeout(function() {setDisplay("jspsych-btn","")}, 1000)},
+      is_html: true,
+      timeline: [
+        {stimulus: 'Congratulations on finishing the first part of the experiment! <br>In the next section, you will see some videos showing how other people solved Sokoban tasks. <br>In each video the true position of the target is hidden, but you know that the target was located either at position A or position B. <br> Your task is to figure out whether the target was located at A or B.'},
+        {stimulus: 'You can use the <u>space</u> button to play (or replay) each video.<br> <strong>After</strong> watching the video, press <u>A</u> or <u>B</u> to indicate where you think the target was located. <br> If you change your mind, press A or B again. Once you are happy with your response press the continue button. <pr><br>Your bonus payment will depend on the accuracy of your inferences in this section.<br><br><br>'}
+      ]
+    };
+
+    timeline.push(instruction_block_3)
+
+    /* instances in the goal recognition part and randomly ordered */
+    const gr_order = [1,2,3,4,9,10,11,12,13,14,15,16,101,102,103,104,109,110,111,112,113,114,115,116,203,204];
+    gr_order.sort(function(a, b) {return 0.5 - Math.random()});
+
+    /* randomlize occurence of A and B */
+    let gr = "instance_gr_json.html?ID=";
+    if (Math.random() - 0.5 > 0) {
+      gr = "instance_gr_json_r.html?ID=";
+    }
+
+    for (let i = 0; i < gr_order.length; i++) {
+      const gr_block = {
+        type:"external-html-keyboard-response",
+        url: gr + gr_order[i],
+        choices: [32, 65, 66],
+        cont_btn: "cb",
+        check_fn: check,
+        execute_script: true
+      };
+
+      timeline.push(gr_block);
+    }
+
+
+    /* survey questions */
+    var survey_trial = {
+      type: 'survey-text',
+      questions: [
+        {prompt: "(Optional) Please describe any strategy you used to figure out where the true target was located.", rows:5},
+        {prompt: "(Optional) Do you have any suggestions for improving this experiment?", rows:5}
+      ],
+    }
+
+    timeline.push(survey_trial);
+
+
+    /* start by running the "welcome" */
+    welcome.run();
+
+  </script>
+</html>
